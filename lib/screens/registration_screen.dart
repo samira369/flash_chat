@@ -3,23 +3,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flash_chat_starting_project/components/rounded_button.dart';
 import 'package:flash_chat_starting_project/screens/chat_screen.dart';
 import 'package:flash_chat_starting_project/services/auth_serviec.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
+import 'package:flash_chat_starting_project/services/auth_serviec.dart';
 import '/constants.dart';
 import 'package:flutter/material.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  static const String id = 'registration_screen';
+
+  static String id = 'registration_screen';
   @override
   _RegistrationScreenState createState() => _RegistrationScreenState();
+
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
-  String errorMessage = " ";
-  bool errorOcurred = false, showSpinner = false;
+  final GlobalKey <FormState> _formkey = GlobalKey<FormState>();
+  var auth = FirebaseAuth.instance;
+  String errorMessage ='';
+  bool errorOcured = false, showSpinner = false;
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,11 +40,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Hero(
-                tag: 'logo',
-                child: SizedBox(
-                  height: 200.0,
-                  child: Image.asset('images/logo.png'),
+              Flexible(
+                child: Hero(
+                  tag: 'logo',
+                  child: SizedBox(
+                    height: 200.0,
+                    child: Image.asset('images/logo.png'),
+                  ),
                 ),
               ),
               const SizedBox(
@@ -48,42 +58,45 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   children: [
                     TextFormField(
                       decoration: KTextFieldDecoration.copyWith(
-                        hintText: 'Enter your email',
-                        labelText: 'Email',
+                          hintText: 'Enter Your email',
+                          labelText: 'email'
                       ),
                       controller: _emailController,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (email) {
-                        return email != null && EmailValidator.validate(email)
-                            ? null
-                            : 'Please enter a valid email';
+                      validator: (email){
+                        return email != null && EmailValidator.validate(email) ? null : 'please enter a valid email';
                       },
                     ),
+
                     const SizedBox(
-                      height: 16,
+                      height: 12,
                     ),
-                    TextFormField(
-                      decoration: KTextFieldDecoration.copyWith(
-                        hintText: 'Enter your password',
-                        labelText: 'password',
+                    Form(
+                      child: TextFormField(
+                        decoration: KTextFieldDecoration.copyWith(
+                            hintText: 'Enter Your Password',
+                            labelText: 'password'
+                        ),
+                        obscureText: true,
+                        controller: _passwordController,
+                        onChanged: (value) {
+                          //Do something with the user input
+                        },
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: (password){
+                          return password != null && password.length >5 ?null :'the password should be at least 5 charecters';
+                        },
                       ),
-                      obscureText: true,
-                      controller: _passwordController,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (password) {
-                        return password != null && password.length > 5
-                            ? null
-                            : 'The password should be of 6 characters at least';
-                      },
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(
-                height: 24.0,
+                height: 15.0,
               ),
               Visibility(
-                visible: errorOcurred,
+                visible: errorOcured,
                 child: Text(
                   errorMessage,
                   textAlign: TextAlign.center,
@@ -94,18 +107,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   color: kRegisterButtonColor,
                   title: 'Register',
                   onPressed: () async {
-                    if (_formkey.currentState!.validate()) {
+                    if(_formkey.currentState!.validate()) {
                       try {
                         setState(() {
-                          errorOcurred = false;
+                          errorOcured = false;
                           showSpinner = true;
                         });
-                        await AuthService()
-                            .createUserWithEmailAndPassword(
+                        await AuthService().
+                        createUserWithEmailAndPassword(
                           email: _emailController.text,
                           password: _passwordController.text,
-                        )
-                            .then((value) {
+                        ).then((value) {
                           Navigator.pop(context);
                           Navigator.pushNamed(context, ChatScreen.id);
                         });
@@ -113,16 +125,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           showSpinner = false;
                         });
                       } catch (e) {
-                        print('ERROR ${e.toString()}');
+                        print('Error ${e.toString()}');
                         setState(() {
                           showSpinner = false;
-                          errorOcurred = true;
+                          errorOcured = true;
                           errorMessage = e.toString().split('] ')[1];
                         });
                       }
                     }
-                  }),
+                  }
+              ),
               const SizedBox(height: 12),
+
               IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
